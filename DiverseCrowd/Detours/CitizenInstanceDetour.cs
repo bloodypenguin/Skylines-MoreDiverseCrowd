@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ColossalFramework;
 using ColossalFramework.Math;
@@ -11,26 +12,20 @@ namespace DiverseCrowd.Detours
     [TargetType(typeof(CitizenInstance))]
     public struct CitizenInstanceDetour
     {
-        private static RedirectCallsState _state;
-        private static MethodInfo _originalInfo;
-        private static MethodInfo _detourInfo = typeof(CitizenInstanceDetour).GetMethod("RenderInstance");
-        private static bool _deployed;
         private static CitizenInfo _policeOfficer;
         private static CitizenInfo _fireman;
         private static CitizenInfo _paramedic;
         private static CitizenInfo _hearseDriver;
         private static bool _isDlcEnabled;
+        private static Dictionary<MethodInfo, RedirectCallsState> _redirects;
 
         public static void Deploy()
         {
-            if (_deployed)
+            if (_redirects != null)
             {
                 return;
             }
-            var tuple = RedirectionUtil.RedirectMethod(typeof(CitizenInstance), _detourInfo);
-            _originalInfo = tuple.First;
-            _state = tuple.Second;
-            _deployed = true;
+            _redirects = RedirectionUtil.RedirectType(typeof(CitizenInstanceDetour));
             _policeOfficer = Resources.FindObjectsOfTypeAll<CitizenInfo>().First(c => c.name == "Police Officer");
             _fireman = Resources.FindObjectsOfTypeAll<CitizenInfo>().First(c => c.name == "Fireman Default");
             _paramedic = Resources.FindObjectsOfTypeAll<CitizenInfo>().First(c => c.name == "Paramedic Default");
@@ -40,12 +35,15 @@ namespace DiverseCrowd.Detours
 
         public static void Revert()
         {
-            if (!_deployed) return;
-            if (_originalInfo != null && _detourInfo != null)
+            if (_redirects == null)
             {
-                RedirectionHelper.RevertRedirect(_originalInfo, _state);
+                return;
             }
-            _deployed = false;
+            foreach (var redirect in _redirects)
+            {
+                RedirectionHelper.RevertRedirect(redirect.Key, redirect.Value);
+            }
+            _redirects = null;
         }
 
         [RedirectMethod]

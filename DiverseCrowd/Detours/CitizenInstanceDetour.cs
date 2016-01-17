@@ -68,7 +68,6 @@ namespace DiverseCrowd.Detours
             if (flag2 && !flag3 || flag1 && !flag3 && (cameraInfo.m_layerMask & 1 << Singleton<CitizenManager>.instance.m_undergroundLayer) == 0)
                 return false;
             //begin mod
-            var originalInfo = info;
             info = GetUpdatedInfo(instance, instanceID);
             //end mod
             Vector3 vector3 = new Bezier3()
@@ -151,7 +150,7 @@ namespace DiverseCrowd.Detours
                 return originalInfo;
             }
             var workBuilding = BuildingManager.instance.m_buildings.m_buffer[citizen.m_workBuilding];
-            if (workBuilding.m_flags != Building.Flags.None)
+            if (workBuilding.m_flags != Building.Flags.None && originalInfo.m_agePhase != Citizen.AgePhase.Child)
             {
                 if (workBuilding.Info.m_buildingAI is FireStationAI)
                 {

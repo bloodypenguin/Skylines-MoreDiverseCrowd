@@ -19,6 +19,8 @@ namespace DiverseCrowd.Detours
         private static bool _isDlcEnabled;
         private static Dictionary<MethodInfo, RedirectCallsState> _redirects;
 
+        public static Dictionary<string, CitizenInfo> customSkins = new Dictionary<string, CitizenInfo>(); 
+
         public static void Deploy()
         {
             if (_redirects != null)
@@ -44,6 +46,7 @@ namespace DiverseCrowd.Detours
                 RedirectionHelper.RevertRedirect(redirect.Key, redirect.Value);
             }
             _redirects = null;
+            customSkins = new Dictionary<string, CitizenInfo>();
         }
 
         [RedirectMethod]
@@ -68,7 +71,12 @@ namespace DiverseCrowd.Detours
             if (flag2 && !flag3 || flag1 && !flag3 && (cameraInfo.m_layerMask & 1 << Singleton<CitizenManager>.instance.m_undergroundLayer) == 0)
                 return false;
             //begin mod
-            info = GetUpdatedInfo(instance, instanceID);
+//            var originalInfo = info;
+//            info = GetUpdatedInfo(instance, instanceID);
+//            if (customSkins.ContainsKey(originalInfo.name))
+//            {
+                info = customSkins.Values.First(); //make this random
+//            }
             //end mod
             Vector3 vector3 = new Bezier3()
             {

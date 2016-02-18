@@ -41,6 +41,7 @@
     <Compile Include="Redirection\RedirectReverseAttribute.cs" />
     <Compile Include="Redirection\TargetTypeAttribute.cs" />
     <Compile Include="Redirection\Tuple.cs" />
+    <Compile Include="Util.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
@@ -55,6 +56,11 @@
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\..\Games\Steam\steamapps\common\Cities_Skylines\Cities_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="PrefabHook" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="skin\rainbow.png" />
+    <EmbeddedResource Include="skin\stripes.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

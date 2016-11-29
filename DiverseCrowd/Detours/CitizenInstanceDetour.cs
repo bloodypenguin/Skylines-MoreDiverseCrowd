@@ -3,7 +3,7 @@ using System.Linq;
 using System.Reflection;
 using ColossalFramework;
 using ColossalFramework.Math;
-using ColossalFramework.Steamworks;
+using ColossalFramework.PlatformServices;
 using DiverseCrowd.Redirection;
 using UnityEngine;
 
@@ -30,7 +30,7 @@ namespace DiverseCrowd.Detours
             _fireman = Resources.FindObjectsOfTypeAll<CitizenInfo>().First(c => c.name == "Fireman Default");
             _paramedic = Resources.FindObjectsOfTypeAll<CitizenInfo>().First(c => c.name == "Paramedic Default");
             _hearseDriver = Resources.FindObjectsOfTypeAll<CitizenInfo>().First(c => c.name == "Hearse Driver Default");
-            _isDlcEnabled = Steam.IsDlcInstalled(369150U);
+            _isDlcEnabled = PlatformService.IsDlcInstalled(369150U);
         }
 
         public static void Revert()

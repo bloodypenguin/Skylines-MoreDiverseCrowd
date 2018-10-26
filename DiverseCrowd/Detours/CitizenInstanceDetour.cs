@@ -17,7 +17,8 @@ namespace DiverseCrowd.Detours
         private static CitizenInfo _paramedic;
         private static CitizenInfo _hearseDriver;
         private static CitizenInfo _rescueWorker;
-
+        private static CitizenInfo _bluecollarFemale;
+        
         private static CitizenInfo _farmingWorker;
         private static CitizenInfo _oilWorker;
         private static CitizenInfo _oreWorker;
@@ -41,6 +42,15 @@ namespace DiverseCrowd.Detours
             _fireman = infos.First(c => c.name == "Fireman Default");
             _paramedic = infos.First(c => c.name == "Paramedic Default");
             _hearseDriver = infos.First(c => c.name == "Hearse Driver Default");
+            try
+            {
+                _bluecollarFemale = infos.First(c => c.name == "Bluecollar Female");
+            }
+            catch
+            {
+                _bluecollarFemale = null;
+            }
+
             _isNdDlcEnabled = SteamHelper.IsDLCOwned(SteamHelper.DLC.NaturalDisastersDLC);
             _isIndustriesDlcEnabled = SteamHelper.IsDLCOwned(SteamHelper.DLC.IndustryDLC);
             if (_isNdDlcEnabled)
@@ -184,54 +194,77 @@ namespace DiverseCrowd.Detours
                 return originalInfo;
             }
 
+            CitizenInfo replacementInfo = null;
+            GetReplacement(workBuilding, originalInfo, ref replacementInfo);
+            return replacementInfo == null ? originalInfo : replacementInfo;
+        }
+
+        private static void GetReplacement(Building workBuilding, CitizenInfo originalInfo, ref CitizenInfo replacementInfo)
+        {
             if (workBuilding.Info.m_buildingAI is FireStationAI)
             {
-                return originalInfo.m_gender == Citizen.Gender.Male ? _fireman : _paramedic;
+                    replacementInfo = originalInfo.m_gender == Citizen.Gender.Male ? _fireman : _paramedic;
             }
 
             if (workBuilding.Info.m_buildingAI is HospitalAI && originalInfo.m_gender == Citizen.Gender.Female)
             {
-                return _paramedic;
+                    replacementInfo = _paramedic;
             }
 
             if (originalInfo.m_gender == Citizen.Gender.Male)
             {
                 if (workBuilding.Info.m_buildingAI is PoliceStationAI || workBuilding.Info.m_buildingAI is TollBoothAI)
                 {
-                    return _policeOfficer;
+                    replacementInfo = _policeOfficer;
                 }
 
                 if (workBuilding.Info.m_buildingAI is CemeteryAI)
                 {
-                    return _hearseDriver;
+                    replacementInfo = _hearseDriver;
                 }
-
-                if (_isIndustriesDlcEnabled)
+            }
+            
+            if (_isIndustriesDlcEnabled)
+            {
+                if (workBuilding.Info.m_buildingAI is IndustrialBuildingAI ||
+                    workBuilding.Info.m_buildingAI is IndustryBuildingAI ||
+                    workBuilding.Info.m_buildingAI is ExtractingDummyAI ||
+                    workBuilding.Info.m_buildingAI is MainIndustryBuildingAI ||
+                    workBuilding.Info.m_buildingAI is WarehouseAI)
                 {
-                    if (workBuilding.Info.m_buildingAI is IndustrialBuildingAI ||
-                        workBuilding.Info.m_buildingAI is IndustryBuildingAI ||
-                        workBuilding.Info.m_buildingAI is ExtractingDummyAI ||
-                        workBuilding.Info.m_buildingAI is MainIndustryBuildingAI ||
-                        workBuilding.Info.m_buildingAI is WarehouseAI ||
-                        workBuilding.Info.m_buildingAI is LandfillSiteAI)
+                    switch (workBuilding.Info.GetSubService())
                     {
-                        switch (workBuilding.Info.GetSubService())
+                        case ItemClass.SubService.PlayerIndustryForestry:
+                        case ItemClass.SubService.IndustrialForestry:
                         {
-                            case ItemClass.SubService.PlayerIndustryForestry:
-                            case ItemClass.SubService.IndustrialForestry:
-                                return _forestryWorker;
-                            case ItemClass.SubService.PlayerIndustryFarming:
-                            case ItemClass.SubService.IndustrialFarming:
-                                return _farmingWorker;
-                            case ItemClass.SubService.PlayerIndustryOil:
-                            case ItemClass.SubService.IndustrialGeneric:
-                            case ItemClass.SubService.IndustrialOil:
-                                return _oilWorker;
-                            case ItemClass.SubService.PlayerIndustryOre:
-                            case ItemClass.SubService.IndustrialOre:
-                                return _oreWorker;
+                            replacementInfo = originalInfo.m_gender == Citizen.Gender.Male ? _forestryWorker : _bluecollarFemale;
+                            break;
+                        }
+                        case ItemClass.SubService.PlayerIndustryFarming:
+                        case ItemClass.SubService.IndustrialFarming:
+                        {
+                            replacementInfo = originalInfo.m_gender == Citizen.Gender.Male ? _farmingWorker : _bluecollarFemale;
+                            break;
+                        }
+                        case ItemClass.SubService.PlayerIndustryOil:
+                        case ItemClass.SubService.IndustrialGeneric:
+                        case ItemClass.SubService.IndustrialOil:
+                        {
+                            replacementInfo = originalInfo.m_gender == Citizen.Gender.Male ? _oilWorker : _bluecollarFemale;
+                            break;;
+                        }
+                        case ItemClass.SubService.PlayerIndustryOre:
+                        case ItemClass.SubService.IndustrialOre:
+                        {
+                            replacementInfo = originalInfo.m_gender == Citizen.Gender.Male ? _oreWorker : _bluecollarFemale;
+                            break;
                         }
                     }
+                }
+                else if (workBuilding.Info.m_buildingAI is LandfillSiteAI || workBuilding.Info.m_buildingAI is PowerPlantAI ||
+                         workBuilding.Info.m_buildingAI is WaterFacilityAI || workBuilding.Info.m_buildingAI is CargoStationAI || workBuilding.Info.m_buildingAI is SnowDumpAI)
+                {
+                    replacementInfo = originalInfo.m_gender == Citizen.Gender.Male ? _oilWorker : _bluecollarFemale;  
                 }
             }
 
@@ -239,13 +272,13 @@ namespace DiverseCrowd.Detours
             {
                 if (workBuilding.Info.m_buildingAI is DisasterResponseBuildingAI)
                 {
-                    return originalInfo.m_gender == Citizen.Gender.Male ? _rescueWorker : _paramedic;
+                        replacementInfo = originalInfo.m_gender == Citizen.Gender.Male ? _rescueWorker : _paramedic;
                 }
 
                 if (workBuilding.Info.m_buildingAI is HelicopterDepotAI &&
                     workBuilding.Info.m_class.m_service == ItemClass.Service.FireDepartment)
                 {
-                    return originalInfo.m_gender == Citizen.Gender.Male ? _fireman : _paramedic;
+                        replacementInfo = originalInfo.m_gender == Citizen.Gender.Male ? _fireman : _paramedic;
                 }
 
                 if (originalInfo.m_gender == Citizen.Gender.Male)
@@ -253,7 +286,7 @@ namespace DiverseCrowd.Detours
                     if (workBuilding.Info.m_buildingAI is HelicopterDepotAI &&
                         workBuilding.Info.m_class.m_service == ItemClass.Service.PoliceDepartment)
                     {
-                        return _policeOfficer;
+                            replacementInfo = _policeOfficer;
                     }
                 }
                 else if (originalInfo.m_gender == Citizen.Gender.Female)
@@ -261,12 +294,10 @@ namespace DiverseCrowd.Detours
                     if (workBuilding.Info.m_buildingAI is HelicopterDepotAI &&
                         workBuilding.Info.m_class.m_service == ItemClass.Service.HealthCare)
                     {
-                        return _paramedic;
+                            replacementInfo = _paramedic;
                     }
                 }
             }
-
-            return originalInfo;
         }
     }
 }

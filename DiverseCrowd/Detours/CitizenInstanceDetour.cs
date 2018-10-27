@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using ColossalFramework;
 using ColossalFramework.Math;
-using ColossalFramework.PlatformServices;
 using DiverseCrowd.Redirection;
 using UnityEngine;
 
@@ -18,6 +17,7 @@ namespace DiverseCrowd.Detours
         private static CitizenInfo _hearseDriver;
         private static CitizenInfo _rescueWorker;
         private static CitizenInfo _bluecollarFemale;
+        private static CitizenInfo _parkStaff;
         
         private static CitizenInfo _farmingWorker;
         private static CitizenInfo _oilWorker;
@@ -27,6 +27,8 @@ namespace DiverseCrowd.Detours
 
         private static bool _isNdDlcEnabled;
         private static bool _isIndustriesDlcEnabled;
+        private static bool _isParklifeDlcEnabled;
+        
         private static Dictionary<MethodInfo, RedirectCallsState> _redirects;
 
         public static void Deploy()
@@ -53,6 +55,7 @@ namespace DiverseCrowd.Detours
 
             _isNdDlcEnabled = SteamHelper.IsDLCOwned(SteamHelper.DLC.NaturalDisastersDLC);
             _isIndustriesDlcEnabled = SteamHelper.IsDLCOwned(SteamHelper.DLC.IndustryDLC);
+            _isParklifeDlcEnabled = SteamHelper.IsDLCOwned(SteamHelper.DLC.ParksDLC);
             if (_isNdDlcEnabled)
             {
                 _rescueWorker = infos.First(c => c.name == "Rescue Worker");
@@ -66,7 +69,10 @@ namespace DiverseCrowd.Detours
                 _oreWorker = infos.First(c => c.name == "Ore Industry Worker 01");
             }
 
-            //TODO: add park ranger
+            if (_isParklifeDlcEnabled)
+            {
+                _parkStaff = infos.First(c => c.name == "Park Staff");    
+            }
         }
 
         public static void Revert()
@@ -224,6 +230,18 @@ namespace DiverseCrowd.Detours
                 }
             }
             
+            if (_isParklifeDlcEnabled)
+            {
+                if (originalInfo.m_gender == Citizen.Gender.Male)
+                {
+                    if (workBuilding.Info.m_buildingAI is ParkAI || (workBuilding.Info.m_buildingAI is ParkBuildingAI ai && ai.m_parkType != DistrictPark.ParkType.AmusementPark) ||
+                        workBuilding.Info.m_buildingAI is ParkGateAI || (workBuilding.Info.m_buildingAI is MaintenanceDepotAI && workBuilding.Info.GetService() == ItemClass.Service.Beautification))
+                    {
+                        replacementInfo = _parkStaff;
+                    }
+                }
+            }
+            
             if (_isIndustriesDlcEnabled)
             {
                 if (workBuilding.Info.m_buildingAI is IndustrialBuildingAI ||
@@ -262,7 +280,8 @@ namespace DiverseCrowd.Detours
                     }
                 }
                 else if (workBuilding.Info.m_buildingAI is LandfillSiteAI || workBuilding.Info.m_buildingAI is PowerPlantAI ||
-                         workBuilding.Info.m_buildingAI is WaterFacilityAI || workBuilding.Info.m_buildingAI is CargoStationAI || workBuilding.Info.m_buildingAI is SnowDumpAI)
+                         workBuilding.Info.m_buildingAI is WaterFacilityAI || workBuilding.Info.m_buildingAI is CargoStationAI || workBuilding.Info.m_buildingAI is SnowDumpAI ||
+                         (workBuilding.Info.m_buildingAI is MaintenanceDepotAI && workBuilding.Info.GetService() == ItemClass.Service.Road))
                 {
                     replacementInfo = originalInfo.m_gender == Citizen.Gender.Male ? _oilWorker : _bluecollarFemale;  
                 }

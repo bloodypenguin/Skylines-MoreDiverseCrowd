@@ -1,4 +1,5 @@
-﻿using DiverseCrowd.Detours;
+﻿using CitiesHarmony.API;
+using DiverseCrowd.Patches.CitizenInstancePatches;
 using ICities;
 
 namespace DiverseCrowd
@@ -8,13 +9,22 @@ namespace DiverseCrowd
         public override void OnLevelLoaded(LoadMode mode)
         {
             base.OnLevelLoaded(mode);
-            CitizenInstanceDetour.Deploy();
+            CitizenInstanceHelper.Initialize();
+            if (!HarmonyHelper.IsHarmonyInstalled)
+            {
+                return;
+            }
+            RenderInstancePatch.Apply();
         }
 
         public override void OnLevelUnloading()
         {
             base.OnLevelUnloading();
-            CitizenInstanceDetour.Revert();
+            if (!HarmonyHelper.IsHarmonyInstalled)
+            {
+                return;
+            }
+            RenderInstancePatch.Undo();
         }
     }
 }
